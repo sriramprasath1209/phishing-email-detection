@@ -261,7 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Verdict Banner
         riskLevelBadge.textContent = riskLevel;
-        finalClassification.textContent = classification.replace(/_/g, " ");
+        finalClassification.textContent = data.classification || classification.replace(/_/g, " ");
         operatingModeTag.textContent = data.operating_mode ? data.operating_mode.replace(/_/g, " ") : "Standard Mode";
         riskScoreValue.textContent = Math.round(riskScore);
 

@@ -416,6 +416,8 @@ class DFADetector:
 
             # Account Threat & Suspension
             ("account suspended", "Account Threat", "HIGH", "Alleges account closure to induce panic and compliance."),
+            ("account has been suspended", "Account Threat", "HIGH", "Alleges account closure to induce panic and compliance."),
+            ("account will be suspended", "Account Threat", "HIGH", "Threatens imminent account suspension."),
             ("unauthorized login attempt", "Account Threat", "HIGH", "Fabricates unauthorized sign-in alert."),
             ("unusual sign in activity", "Account Threat", "MEDIUM", "Claims suspicious access to provoke verification action."),
             ("suspicious activity detected", "Account Threat", "MEDIUM", "Generic security alert used in credential phishing."),

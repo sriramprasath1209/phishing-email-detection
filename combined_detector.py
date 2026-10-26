@@ -1,13 +1,12 @@
 """PhishGuard Combined Detection Engine.
 
 Fuses multi-modal detection signals:
-1. Deterministic Finite Automaton (Phrase matching and URL structural analysis)
+1. Deterministic Finite Automaton (Token-based Phrase DFA and URL Structure DFA)
 2. Custom Machine Learning Classifier (TF-IDF + Logistic Regression)
 3. Optional Small Language Model (SLM intent/coercion interface)
 
-Combines findings transparently into an interpretable Risk Score (0-100) and
-Final Classification, with fallback into clearly labeled Reduced Capability Mode
-if the ML model or SLM is unavailable.
+Combines findings transparently into an interpretable Risk Score (0-100),
+evaluates detector disagreements, and maps to final verified classifications.
 """
 
 from typing import Dict, Any, List, Optional
@@ -41,21 +40,37 @@ class CombinedDetector:
         self.model = model_detector or ModelDetector(model_path, threshold)
         self.slm = slm_detector or SLMDetector(self.config)
 
-    def analyze(self, subject: str, body: str, sender: str = "") -> Dict[str, Any]:
-        """Runs integrated multi-engine analysis across the email inputs."""
+    def analyze_email(self, email_text: str) -> Dict[str, Any]:
+        """Analyzes a single combined email text string."""
+        return self.analyze(subject="", body=email_text)
+
+    def analyze(self, subject: str = "", body: str = "", sender: str = "") -> Dict[str, Any]:
+        """Runs integrated multi-engine analysis across email inputs."""
         clean_subject = (subject or "").strip()
         clean_body = (body or "").strip()
         clean_sender = (sender or "").strip()
 
+        combined_text = f"{clean_subject}\n{clean_body}".strip()
+        if clean_sender:
+            combined_text = f"From: {clean_sender}\n{combined_text}"
+
         # Handle empty inputs
-        if not clean_subject and not clean_body:
+        if not combined_text:
             return {
+                "status": "error",
+                "classification": "Analysis Unavailable",
                 "final_classification": "INCONCLUSIVE",
                 "risk_level": "UNKNOWN",
                 "risk_score": 0.0,
                 "operating_mode": "IDLE",
                 "is_reduced_capability": not self.model.is_loaded,
+                "model_prediction": None,
+                "model_confidence": None,
+                "dfa_result": self.dfa.analyze("", ""),
+                "indicators": [],
+                "warnings": ["No email text provided for analysis."],
                 "reasons": ["No email subject or body text provided for analysis."],
+                "explanation": "No text provided. Please enter an email subject or body to analyze.",
                 "dfa": self.dfa.analyze("", ""),
                 "machine_learning": self.model.predict("", ""),
                 "slm": self.slm.analyze("", ""),
@@ -68,11 +83,14 @@ class CombinedDetector:
         # 2. Execute ML Inference
         ml_result = self.model.predict(clean_subject, clean_body, clean_sender)
 
-        # 3. Query Optional SLM
+        # 3. Query Optional SLM Interface
         slm_result = self.slm.analyze(clean_subject, clean_body, clean_sender)
 
-        # 4. Synthesize Evidence and Calculate Risk Score
+        # 4. Synthesize Evidence, Warnings, and Rationale
         reasons: List[str] = []
+        warnings_list: List[str] = []
+        indicators: List[str] = []
+
         dfa_score = dfa_result["dfa_risk_score"]
         url_findings = dfa_result.get("url_findings", [])
         detected_phrases = dfa_result.get("detected_phrases", [])
@@ -83,46 +101,70 @@ class CombinedDetector:
         for u in url_findings:
             for anom in u.get("anomalies", []):
                 url_anomalies_count += 1
+                flag_str = f"URL Anomaly [{anom['type']}]: {anom['explanation']}"
+                indicators.append(flag_str)
+                reasons.append(flag_str)
                 if anom.get("severity") == "CRITICAL":
                     critical_url_flags = True
-                reasons.append(f"URL Anomaly [{anom['type']}]: {anom['explanation']}")
 
         # Collect DFA phrase matches
         critical_phrase_flags = False
         for p in detected_phrases:
+            phrase_str = f"DFA Pattern [{p['category']}]: '{p['pattern']}' ({p['explanation']})"
+            indicators.append(phrase_str)
+            reasons.append(phrase_str)
             if p.get("severity") == "CRITICAL":
                 critical_phrase_flags = True
-            reasons.append(f"DFA Pattern [{p['category']}]: '{p['pattern']}' ({p['explanation']})")
 
-        # Determine operating mode & calculate risk score
+        # Decision synthesis
         if ml_result["is_available"] and ml_result["phishing_probability"] is not None:
             operating_mode = "HYBRID_DFA_AND_ML"
             is_reduced = False
             ml_prob = ml_result["phishing_probability"]
+            ml_pred = ml_result["prediction"]
             ml_score = ml_prob * 100.0
 
             reasons.append(
-                f"ML Classifier estimated phishing probability of {ml_prob * 100:.1f}% "
-                f"(Decision Threshold: {self.config.MODEL_DECISION_THRESHOLD * 100:.0f}%)."
+                f"Trained ML Classifier estimated phishing probability of {ml_prob * 100:.1f}% "
+                f"(Threshold: {self.model.threshold * 100:.0f}%, Class: {ml_result.get('mapped_classification', ml_pred)})."
             )
 
-            # Feature explanation from model
+            # Highlight salient features
             top_features = ml_result.get("contributing_features", [])
             if top_features:
                 feature_summary = ", ".join(f"'{f['term']}' ({f['direction']})" for f in top_features[:3])
-                reasons.append(f"Salient model features influencing classification: {feature_summary}.")
+                reasons.append(f"Salient model features: {feature_summary}.")
 
-            # Transparent weighted combination:
-            # 50% ML Probability + 35% DFA Phrase Score + 15% URL Structural Weight
+            # Check detector agreement/disagreement
+            dfa_is_phish = (dfa_score >= 35.0 or critical_phrase_flags or critical_url_flags)
+            ml_is_phish = (ml_pred == "PHISHING")
+
+            if dfa_is_phish and not ml_is_phish:
+                # DFA found concrete threat patterns, but ML fell below threshold
+                disagree_msg = (
+                    "Detector Disagreement: DFA matched explicit threat indicators (e.g., credential requests or IP URLs), "
+                    "while statistical ML returned a lower probability. Conservative policy elevates risk to protect against credential theft."
+                )
+                warnings_list.append(disagree_msg)
+                reasons.append(disagree_msg)
+
+            elif ml_is_phish and not dfa_is_phish:
+                # ML found vocabulary correlation, but no exact DFA phrases matched
+                disagree_msg = (
+                    "Detector Notice: ML classifier identified suspicious vocabulary correlation, "
+                    "though no configured exact DFA phrase patterns were triggered."
+                )
+                reasons.append(disagree_msg)
+
+            # Multi-factor score formulation
             url_penalty = min(100.0, url_anomalies_count * 25.0)
             combined_score = (
-                (ml_score * self.config.WEIGHT_ML_MODEL) +
-                (dfa_score * self.config.WEIGHT_DFA) +
-                (url_penalty * self.config.WEIGHT_STRUCTURAL_URL)
+                (ml_score * getattr(self.config, "WEIGHT_ML_MODEL", 0.50)) +
+                (dfa_score * getattr(self.config, "WEIGHT_DFA", 0.35)) +
+                (url_penalty * getattr(self.config, "WEIGHT_STRUCTURAL_URL", 0.15))
             )
 
-            # Safety floor: If high-severity DFA indicators exist (e.g. raw IP host or password harvest),
-            # ensure risk score reflects genuine threat regardless of low statistical confidence
+            # Security floor: Critical DFA indicators guarantee high-risk verdict
             if critical_url_flags or critical_phrase_flags:
                 combined_score = max(combined_score, 75.0)
                 reasons.append("Risk floor elevated to 75+ due to critical DFA security violations.")
@@ -130,15 +172,16 @@ class CombinedDetector:
             risk_score = min(100.0, max(0.0, round(combined_score, 1)))
 
         else:
-            # Reduced Capability Mode: ML model is absent
+            # Reduced Capability Mode: ML model file missing
             operating_mode = "REDUCED_CAPABILITY_DFA_ONLY"
             is_reduced = True
-            reasons.append(
-                "Operating in Reduced Capability Mode: Custom ML model is not loaded. "
-                "Scoring is based strictly on DFA rules and URL heuristics."
+            warn_msg = (
+                "Operating in Reduced Capability Mode: Trained ML model is unavailable. "
+                "Analysis is based strictly on DFA rules and URL heuristics."
             )
+            warnings_list.append(warn_msg)
+            reasons.append(warn_msg)
 
-            # Calculate heuristic score from DFA
             url_penalty = min(100.0, url_anomalies_count * 30.0)
             combined_score = (dfa_score * 0.70) + (url_penalty * 0.30)
             if critical_url_flags or critical_phrase_flags:
@@ -146,33 +189,50 @@ class CombinedDetector:
             risk_score = min(100.0, max(0.0, round(combined_score, 1)))
 
         # Determine Final Classification and Risk Level
+        threshold_suspicious = getattr(self.config, "THRESHOLD_SUSPICIOUS", 65.0)
+        threshold_legit = getattr(self.config, "THRESHOLD_LEGITIMATE", 30.0)
+
         if is_reduced and dfa_score == 0 and url_anomalies_count == 0:
-            # Rule: Do not label an email "safe" solely because no configured patterns matched
-            # when the ML classifier is unavailable
             final_classification = "INCONCLUSIVE"
+            classification_label = "Analysis Unavailable"
             risk_level = "LOW_CONFIDENCE"
             reasons.append(
                 "No known malicious patterns detected by DFA, but cannot confirm legitimacy "
                 "because machine learning model is inactive."
             )
-        elif risk_score >= self.config.THRESHOLD_SUSPICIOUS:
+            explanation = "No malicious DFA indicators matched, but machine learning validation was unavailable."
+        elif risk_score >= threshold_suspicious:
             final_classification = "PHISHING"
+            classification_label = "Potential Phishing"
             risk_level = "CRITICAL" if risk_score >= 80.0 else "HIGH"
-        elif risk_score >= self.config.THRESHOLD_LEGITIMATE:
+            explanation = f"Classified as Potential Phishing with high risk score ({risk_score:.0f}/100) based on multi-factor analysis."
+        elif risk_score >= threshold_legit:
             final_classification = "SUSPICIOUS"
+            classification_label = "Suspicious"
             risk_level = "MODERATE"
+            explanation = f"Classified as Suspicious with moderate risk score ({risk_score:.0f}/100); exercise caution before interacting."
         else:
             final_classification = "LIKELY_LEGITIMATE"
+            classification_label = "Likely Legitimate"
             risk_level = "LOW"
             reasons.append("Email text exhibits benign statistical and syntactic characteristics.")
+            explanation = f"Classified as Likely Legitimate ({risk_score:.0f}/100); no significant threat indicators identified."
 
         return {
+            "status": "success",
+            "classification": classification_label,
             "final_classification": final_classification,
             "risk_level": risk_level,
             "risk_score": risk_score,
             "operating_mode": operating_mode,
             "is_reduced_capability": is_reduced,
+            "model_prediction": ml_result.get("prediction"),
+            "model_confidence": ml_result.get("confidence"),
+            "dfa_result": dfa_result,
+            "indicators": indicators,
+            "explanation": explanation,
             "reasons": reasons,
+            "warnings": warnings_list,
             "dfa": dfa_result,
             "machine_learning": ml_result,
             "slm": slm_result,

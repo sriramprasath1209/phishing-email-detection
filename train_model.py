@@ -40,14 +40,14 @@ def load_and_preprocess_dataset(csv_path: Path) -> Tuple[pd.Series, pd.Series]:
 
     df = pd.read_csv(csv_path)
 
-    # Validate column structure
-    required_cols = {"text", "label"}
-    if not required_cols.issubset(df.columns):
-        raise ValueError(f"Dataset must contain 'text' and 'label' columns. Found: {list(df.columns)}")
+    # Validate column structure (support 'text' or 'text_combined')
+    text_col = "text_combined" if "text_combined" in df.columns else "text"
+    if text_col not in df.columns or "label" not in df.columns:
+        raise ValueError(f"Dataset must contain 'label' and either 'text' or 'text_combined' columns. Found: {list(df.columns)}")
 
     # Clean missing values
     initial_count = len(df)
-    df = df.dropna(subset=["text", "label"])
+    df = df.dropna(subset=[text_col, "label"])
 
     # Cast and clean labels
     df["label"] = df["label"].astype(int)
@@ -56,17 +56,17 @@ def load_and_preprocess_dataset(csv_path: Path) -> Tuple[pd.Series, pd.Series]:
         raise ValueError(f"Labels must be 0 (legitimate) or 1 (phishing). Found: {df['label'].unique()}")
 
     # Anti-leakage: Deduplicate identical email texts
-    df["text"] = df["text"].astype(str).str.strip()
-    df = df.drop_duplicates(subset=["text"])
+    df[text_col] = df[text_col].astype(str).str.strip()
+    df = df.drop_duplicates(subset=[text_col])
     deduped_count = len(df)
 
     print(f"[*] Loaded dataset: {initial_count} raw rows -> {deduped_count} deduplicated rows.")
-    print(f"[*] Class distribution: {df['label'].value_counts().to_dict()} (0=Ham, 1=Phish)")
+    print(f"[*] Class distribution: {df['label'].value_counts().to_dict()} (0=Ham/Legitimate, 1=Phish)")
 
     if deduped_count < 10:
         raise ValueError("Dataset is too small to split and train meaningfully (minimum 10 rows required).")
 
-    return df["text"], df["label"]
+    return df[text_col], df["label"]
 
 
 def build_pipeline() -> Pipeline:
@@ -82,7 +82,7 @@ def build_pipeline() -> Pipeline:
             )
         ),
         (
-            "clf",
+            "classifier",
             LogisticRegression(
                 C=1.5,
                 max_iter=1000,

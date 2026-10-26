@@ -1,14 +1,12 @@
-# PhishGuard — Phishing Email Detection Using DFA and SLM
+# PhishGuard — Phishing Email Detection System (DFA & Machine Learning)
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![Framework: Flask](https://img.shields.io/badge/framework-Flask-black.svg)](https://flask.palletsprojects.com/)
 [![Scikit-Learn](https://img.shields.io/badge/ML-scikit--learn-orange.svg)](https://scikit-learn.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests: 27 Passing](https://img.shields.io/badge/tests-27%20passing-brightgreen.svg)](tests/)
+[![Tests: 40 Passing](https://img.shields.io/badge/tests-40%20passing-brightgreen.svg)](tests/)
 
-**PhishGuard** is a full-stack cybersecurity web application designed to detect and triage phishing emails. It combines a formal **Deterministic Finite Automaton (DFA)** state machine for exact pattern and URL structural analysis, a custom-trained **TF-IDF + Logistic Regression Machine Learning Pipeline**, and a modular, prompt-injection-defended interface for future **Small Language Model (SLM)** integration.
-
-Designed with a modern, dark-themed cybersecurity dashboard, PhishGuard provides actionable risk scoring, component breakdown, salient feature explanations, and transparent decision rationales.
+**PhishGuard** is an open-source, full-stack cybersecurity web application designed for collegiate and academic research demonstrations. It combines a formal **Deterministic Finite Automaton (DFA)** state machine for exact pattern and URL structural analysis, an integrated **TF-IDF + Logistic Regression Machine Learning Pipeline** trained on ~82,077 emails, and a prompt-injection-defended modular interface for future **Small Language Model (SLM)** integration.
 
 ---
 
@@ -16,36 +14,36 @@ Designed with a modern, dark-themed cybersecurity dashboard, PhishGuard provides
 
 1. [Key Features](#key-features)
 2. [Architecture Overview](#architecture-overview)
-3. [Technology Stack](#technology-stack)
-4. [Project Structure](#project-structure)
-5. [Prerequisites & macOS Setup](#prerequisites--macos-setup)
-6. [Installation & Quickstart](#installation--quickstart)
-7. [Dataset Preparation & Custom Model Training](#dataset-preparation--custom-model-training)
-8. [Running Automated Tests](#running-automated-tests)
-9. [REST API Documentation & Examples](#rest-api-documentation--examples)
-10. [Small Language Model (SLM) Integration Guide](#small-language-model-slm-integration-guide)
-11. [Limitations & Adversarial Considerations](#limitations--adversarial-considerations)
-12. [Git & GitHub Setup](#git--github-setup)
+3. [Trained Model & Dataset Verification](#trained-model--dataset-verification)
+4. [Technology Stack](#technology-stack)
+5. [Project Directory Structure](#project-directory-structure)
+6. [Prerequisites & macOS Setup](#prerequisites--macos-setup)
+7. [Installation & Launch Instructions](#installation--launch-instructions)
+8. [Automated Test Suite](#automated-test-suite)
+9. [REST API Documentation & Endpoints](#rest-api-documentation--endpoints)
+10. [DFA State Machine Specification](#dfa-state-machine-specification)
+11. [SLM Clarification & Future Integration](#slm-clarification--future-integration)
+12. [Limitations, Adversarial Threats & Privacy](#limitations-adversarial-threats--privacy)
+13. [Git & GitHub Setup](#git--github-setup)
 
 ---
 
 ## 1. Key Features
 
 - **Multi-Modal Detection Engine**:
-  - **Deterministic Finite Automaton (DFA)**: Scans email text via an $O(N)$ single-pass prefix automaton for multi-token phishing phrases (e.g., *"verify your account"*, *"confirm your password"*, *"wire transfer request"*).
-  - **URL Structural Scanner DFA**: Inspects raw IP addresses in URL hostnames (e.g., `http://192.168.1.1/login`), `@` userinfo spoofing (e.g., `http://chase.com@phish.xyz`), non-standard HTTP ports, hex/percent encoding, and high-abuse top-level domains (`.xyz`, `.top`, `.click`).
-  - **Interpretable Machine Learning**: Custom TF-IDF vectorizer + Logistic Regression pipeline fitted with strict anti-leakage boundaries and salient feature attribution.
-  - **Modular SLM Interface**: Prompt-injection-isolated architectural interface for qualitative intent and coercion auditing using local Small Language Models (e.g. Llama-3.2-1B, Phi-3.5-mini).
-- **Transparent Risk Scoring**:
-  - Generates a calibrated Risk Score ($0 - 100$) and four risk classifications: `LIKELY_LEGITIMATE` ($<30$), `SUSPICIOUS` ($30-65$), `PHISHING` ($>65$), or `INCONCLUSIVE`.
-  - Enforces a critical risk floor when high-severity DFA indicators (e.g., raw IP hosts or password harvest prompts) are triggered.
+  - **Deterministic Finite Automaton (DFA)**: Implements an explicit $O(N)$ single-pass prefix automaton for high-confidence multi-token threat phrases (e.g., *"verify your account"*, *"confirm your password"*, *"account has been suspended"*, *"wire transfer request"*).
+  - **URL Structural Scanner DFA**: Character-by-character state machine detecting raw IPv4 host addresses (`http://192.168.1.1/login`), `@` userinfo brand spoofing (`http://chase.com@phish.xyz`), non-standard HTTP ports, hex/percent obfuscation, and suspicious top-level domains (`.xyz`, `.top`, `.click`).
+  - **Trained Machine Learning Model**: Custom Scikit-learn Pipeline (`TfidfVectorizer` + `LogisticRegression`) trained on ~82,077 clean email records with empirical label verification.
+  - **Explainability**: Extracts salient words and bigrams influencing model decisions with directional weights (`Phishing` vs. `Legitimate`).
+- **Conservative Decision Policy & Disagreement Handling**:
+  - Resolves conflicts between rule-based DFA indicators and statistical ML probabilities (e.g. if an email contains explicit password harvest prompts or raw IP hosts, a critical risk floor of $\ge 75$ is enforced regardless of lower statistical confidence).
 - **Reduced Capability Mode**:
-  - If the machine learning model is uninitialized or missing, the system operates in a clearly labeled DFA-only mode.
-  - Adheres to sound security principles: emails without detected patterns are labeled `INCONCLUSIVE` rather than blindly declared "safe".
-- **Enterprise-Grade Cybersecurity Dashboard**:
-  - Dark navy palette (`#070b14`), blue/violet accent lighting, and responsive typography (Inter & JetBrains Mono).
-  - One-click presets for legitimate meeting notes, banking alerts, courier delivery scams, and executive wire fraud.
-  - Strict client-side security: uses `textContent` rendering throughout to prevent Cross-Site Scripting (XSS); defangs links so they cannot be clicked accidentally.
+  - If the trained model file is absent, the system transparently shifts to DFA-only mode.
+  - Avoids false senses of security: emails without detected patterns are labeled **`Analysis Unavailable`** (`INCONCLUSIVE`) rather than "safe" when ML validation is inactive.
+- **Cybersecurity Dashboard**:
+  - Dark navy theme (`#070b14`), blue/violet accent lighting, and responsive typography (Inter & JetBrains Mono).
+  - Pre-configured test lures for instant testing.
+  - Safe client-side rendering via `textContent` (zero `innerHTML` injection) and defanged URLs to prevent accidental link execution.
 
 ---
 
@@ -76,7 +74,7 @@ Designed with a modern, dark-themed cybersecurity dashboard, PhishGuard provides
                          ┌─────────────────────────────┐
                          │   Combined Detector Engine  │
                          │   • Risk Scoring (0 - 100)  │
-                         │   • Mode Auto-Switching     │
+                         │   • Disagreement Resolution │
                          │   • Transparent Rationale   │
                          └──────────────┬──────────────┘
                                         │
@@ -91,68 +89,89 @@ For full mathematical definitions, state transition graphs, and tables, see [`do
 
 ---
 
-## 3. Technology Stack
+## 3. Trained Model & Dataset Verification
 
-- **Frontend**: HTML5, Vanilla CSS3 (Custom Design System), Vanilla JavaScript (ES6+), Fetch API.
-- **Backend**: Python 3.10+, Flask, REST API.
-- **Machine Learning**: Scikit-learn, TF-IDF Vectorization, Logistic Regression, Pandas, NumPy, Joblib.
-- **Automated Testing**: Pytest, Flask Test Client.
-- **Operating Environment**: macOS, VS Code, Git.
+### Dataset Ground Truth
+The machine learning model was trained using the benchmark phishing corpus ([`zefang-liu/phishing-email-dataset`](https://huggingface.co/datasets/zefang-liu/phishing-email-dataset) / `phishing_email.csv`).
+
+- **Total Volume**: ~82,486 raw rows (~82,077 clean, deduplicated entries).
+- **Features**: `text_combined` (subject and body text), `label`.
+- **Empirical Label Semantics (Verified)**:
+  - **`label = 0`**: **Legitimate** (Corporate communication from Enron, Ham corpora).
+  - **`label = 1`**: **Phishing** (Malicious lures, spam, credential harvesting from Nazario, SpamAssassin, and CEAS).
+
+### Model Pipeline Specifications
+- **Persistence Path**: `models/phishing_model.joblib`
+- **Vectorizer**: `TfidfVectorizer` (50,000 features, unigrams & bigrams, sublinear term frequency).
+- **Classifier**: `LogisticRegression(C=1.5, class_weight='balanced', max_iter=1000)`.
+- **Test Performance in Colab**: Approximately 98.82% accuracy on initial held-out split.
+  *(Note: Held-out benchmark metrics do not guarantee 100% real-world detection against novel zero-day phishing lures).*
 
 ---
 
-## 4. Project Structure
+## 4. Technology Stack
+
+- **Frontend**: HTML5, Vanilla CSS3 (Custom Dark Navy Theme), Vanilla JavaScript (ES6+), Fetch API.
+- **Backend**: Python 3.10+, Flask, REST API.
+- **Machine Learning**: Scikit-learn, TF-IDF Vectorization, Logistic Regression, Pandas, NumPy, Joblib.
+- **Testing**: Pytest (40 passing tests across API, DFA, model inference, and edge cases).
+- **Environment**: macOS Sonoma / Sequoia, Git.
+
+---
+
+## 5. Project Directory Structure
 
 ```
 Phishing Email Detection/
 ├── app.py                      # Flask REST API server and routing
-├── requirements.txt            # Python package dependencies
-├── README.md                   # Complete documentation and setup manual
-├── .gitignore                  # Git exclusions for venv, cache, and artifacts
-├── config.py                   # Central security, threshold, and scoring configs
+├── requirements.txt            # Python dependencies (Flask, scikit-learn, pandas, joblib, pytest)
+├── README.md                   # Comprehensive documentation and operational guide
+├── .gitignore                  # Git exclusions for .venv, pycache, and binary model artifacts
+├── config.py                   # Central configuration (thresholds, security limits, scoring weights)
 ├── dfa_detector.py             # Formal DFA engine (PhraseDFA & URLStructureDFA)
 ├── model_detector.py           # ML inference engine and salient feature extractor
-├── train_model.py              # ML training pipeline with anti-leakage splitting
-├── combined_detector.py        # Multi-modal fusion and risk score calculator
+├── train_model.py              # ML training pipeline with anti-leakage stratified splitting
+├── combined_detector.py        # Multi-modal fusion engine and risk scoring
 ├── slm_detector.py             # Modular Small Language Model interface
 ├── templates/
-│   └── index.html              # Accessible cybersecurity dashboard UI
+│   └── index.html              # Dark-themed cybersecurity dashboard template
 ├── static/
-│   ├── style.css               # Dark navy design system
-│   └── script.js               # Client-side validation, presets, and safe DOM
+│   ├── style.css               # Vanilla CSS design system (Dark navy, indigo/cyan accents)
+│   └── script.js               # Vanilla JS client (Fetch API, presets, safe textContent rendering)
 ├── data/
-│   ├── README.md               # Dataset sourcing and format guide
+│   ├── README.md               # Dataset sourcing, format specs, and anti-leakage guide
 │   └── sample_dataset.csv      # Curated dataset for training validation
 ├── models/
 │   ├── .gitkeep                # Tracks models directory in Git
 │   └── phishing_model.joblib   # Trained scikit-learn model artifact
 ├── tests/
-│   ├── __init__.py             # Test package initialization
-│   ├── test_api.py             # API input validation and endpoint tests
-│   ├── test_dfa.py             # Formal DFA transition and pattern tests
-│   └── test_model.py           # Model loader, training, and inference tests
+│   ├── __init__.py             # Test package marker
+│   ├── test_api.py             # API endpoint validation and error handling tests
+│   ├── test_dfa.py             # DFA token transitions and URL state machine tests
+│   ├── test_model.py           # ML training, inference, and missing-model tests
+│   └── test_detection.py       # Comprehensive scenario, disagreement, and failure mode tests
 └── docs/
-    └── architecture.md         # Comprehensive system specification
+    └── architecture.md         # Comprehensive system specification & mathematical DFA model
 ```
 
 ---
 
-## 5. Prerequisites & macOS Setup
+## 6. Prerequisites & macOS Setup
 
-- **Operating System**: macOS Sonoma or later (Apple Silicon / Intel).
+- **Operating System**: macOS (Apple Silicon or Intel).
 - **Python**: Python 3.10, 3.11, 3.12, or 3.14.
 - **Terminal**: `zsh` or `bash`.
 
-Verify your Python installation in Terminal:
+Verify your Python installation:
 ```bash
 python3 --version
 ```
 
 ---
 
-## 6. Installation & Quickstart
+## 7. Installation & Launch Instructions
 
-### Step 1: Clone or Navigate to the Workspace
+### Step 1: Open Terminal in Workspace
 ```bash
 cd "/Users/sriramprasath/Documents/Phishing Email Detection"
 ```
@@ -168,12 +187,12 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Step 4: Train the Custom Classifier
-Train the initial baseline classifier on the curated dataset:
+### Step 4: Verify Model Placement
+Ensure the trained model file `phishing_model.joblib` is located in the `models/` directory:
 ```bash
-python train_model.py
+ls -lh models/phishing_model.joblib
 ```
-*This evaluates accuracy, precision, recall, and confusion matrix, saving the pipeline to `models/phishing_model.joblib`.*
+*(If missing, copy your exported Colab model into `models/phishing_model.joblib` or run `python train_model.py` to train a baseline model).*
 
 ### Step 5: Start the Flask Application
 ```bash
@@ -188,43 +207,18 @@ http://127.0.0.1:5000
 
 ---
 
-## 7. Dataset Preparation & Custom Model Training
+## 8. Automated Test Suite
 
-### Dataset Format
-PhishGuard expects a CSV containing `text` and `label` columns:
-- `text`: Email subject and body content.
-- `label`: `0` for Legitimate (Ham), `1` for Phishing.
-
-```csv
-text,label
-"Team sync meeting scheduled for Thursday at 2 PM to review quarterly OKRs.",0
-"Your account has been suspended due to suspicious activity. Verify credentials at http://192.168.1.1/auth now.",1
-```
-
-### Training Command Options
-To train on your own external dataset (e.g. Enron, Nazario corpus, or Kaggle CSVs):
-```bash
-python train_model.py --data data/your_custom_dataset.csv --output models/phishing_model.joblib --test-size 0.25 --seed 42
-```
-
-### Training Pipeline Protections
-1. **Deduplication**: Automatically drops identical emails before splitting to eliminate train/test contamination.
-2. **Stratification**: Guarantees identical legitimate-to-phishing class distributions across training and test sets.
-3. **Pipeline Fitting**: TF-IDF vectorizer fits strictly on the training partition, ensuring zero feature leakage.
-
----
-
-## 8. Running Automated Tests
-
-PhishGuard includes 27 comprehensive unit and integration tests covering:
-- DFA multi-token phrase transitions and case-insensitivity.
+PhishGuard includes **40 automated unit, integration, and scenario tests** covering:
+- Ordinary benign emails.
+- Urgent account verification lures and direct credential requests.
 - URL character-level DFA checks (IPv4 hosts, userinfo `@` spoofing, non-standard ports, suspicious TLDs).
-- Custom ML training pipeline execution and persistence.
-- Salient feature extraction and decision threshold mechanics.
-- Combined detector in full hybrid mode and reduced capability mode.
-- REST API validation: valid requests, empty input (400), malformed JSON (400), invalid types (400), oversized payloads (413), method not allowed (405).
+- Input boundary validation (empty input, whitespace-only, missing JSON fields, malformed JSON, oversized payloads > 50,000 chars).
+- Model failure modes (missing file, corrupted weights).
+- Disagreement handling between DFA rules and ML statistics.
+- Verified label mapping (`0 = Legitimate`, `1 = Phishing`).
 
-Execute the test suite:
+Run the full test suite:
 ```bash
 pytest tests/ -v
 ```
@@ -232,22 +226,22 @@ pytest tests/ -v
 Expected output:
 ```
 tests/test_api.py::TestAPIEndpoints::test_get_index_page PASSED
-tests/test_api.py::TestAPIEndpoints::test_health_check_endpoint PASSED
-tests/test_api.py::TestAPIEndpoints::test_analyze_valid_payload PASSED
+tests/test_detection.py::TestEmailScenarios::test_simple_ordinary_email PASSED
+tests/test_detection.py::TestEmailScenarios::test_urgent_account_verification_language PASSED
+tests/test_detection.py::TestEmailScenarios::test_email_requesting_credentials PASSED
+tests/test_detection.py::TestEmailScenarios::test_email_with_suspicious_url PASSED
+tests/test_detection.py::TestModelFailureModesAndDisagreements::test_disagreement_between_dfa_and_ml PASSED
+tests/test_detection.py::TestModelFailureModesAndDisagreements::test_verified_label_mapping PASSED
 ...
-tests/test_dfa.py::TestPhraseDFA::test_exact_phrase_match PASSED
-tests/test_dfa.py::TestURLStructureDFA::test_detect_ipv4_host PASSED
-...
-tests/test_model.py::TestModelTrainingAndInference::test_trained_model_inference_phishing PASSED
-============================== 27 passed in 1.01s ==============================
+============================== 40 passed in 1.13s ==============================
 ```
 
 ---
 
-## 9. REST API Documentation & Examples
+## 9. REST API Documentation & Endpoints
 
 ### `GET /api/health`
-Returns backend health and component availability.
+Returns backend service status and component availability.
 
 **Example Request:**
 ```bash
@@ -262,13 +256,13 @@ curl -s http://127.0.0.1:5000/api/health
   "version": "1.0.0",
   "components": {
     "dfa_engine": {
-      "registered_phrases": 74,
+      "registered_phrases": 80,
       "status": "active"
     },
     "machine_learning_model": {
+      "decision_threshold": 0.5,
       "is_loaded": true,
       "model_path": ".../models/phishing_model.joblib",
-      "decision_threshold": 0.5,
       "status_message": "Loaded and operational."
     },
     "slm_interface": {
@@ -283,57 +277,62 @@ curl -s http://127.0.0.1:5000/api/health
 ---
 
 ### `POST /api/analyze`
-Analyzes email subject and body for phishing indicators.
+Analyzes email content for phishing indicators. Supports both unified string format and multi-field format.
 
 **Headers**:
 - `Content-Type: application/json`
 
-**Payload Schema**:
+**Unified Payload Format**:
 ```json
 {
-  "subject": "string (required, max 500 chars)",
-  "body": "string (required, max 50000 chars)",
-  "sender": "string (optional, max 320 chars)"
+  "email_text": "URGENT: Your account has been suspended! You must confirm your password at http://192.168.1.50/auth within 24 hours."
 }
 ```
 
-**Example Request (Phishing):**
+**Multi-Field Payload Format**:
+```json
+{
+  "subject": "URGENT: Your account has been suspended",
+  "body": "Confirm your password at http://192.168.1.50/auth within 24 hours.",
+  "sender": "service-alert@chase-support.xyz"
+}
+```
+
+**Example Request:**
 ```bash
 curl -s -X POST http://127.0.0.1:5000/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{
-    "subject": "URGENT: Your account has been suspended",
-    "body": "Confirm your password and verify your account at http://192.168.1.50/verify immediately.",
-    "sender": "service-alert@chase-support.xyz"
-  }'
+  -d '{"email_text": "URGENT: Your account has been suspended! You must confirm your password at http://192.168.1.50/auth within 24 hours."}'
 ```
 
-**Example Response (Excerpt):**
+**Example Response:**
 ```json
 {
+  "status": "success",
+  "classification": "Potential Phishing",
   "final_classification": "PHISHING",
-  "risk_level": "HIGH",
-  "risk_score": 75.0,
+  "risk_level": "CRITICAL",
+  "risk_score": 85.7,
   "operating_mode": "HYBRID_DFA_AND_ML",
   "is_reduced_capability": false,
-  "dfa": {
-    "dfa_risk_score": 95.0,
-    "indicators_count": 3,
+  "model_prediction": "PHISHING",
+  "model_confidence": 0.9741,
+  "dfa_result": {
     "detected_phrases": [
       {
-        "category": "Credential Harvesting",
-        "pattern": "confirm your password",
-        "severity": "CRITICAL"
+        "pattern": "account has been suspended",
+        "category": "Account Threat",
+        "severity": "HIGH"
       },
       {
+        "pattern": "confirm your password",
         "category": "Credential Harvesting",
-        "pattern": "verify your account",
-        "severity": "HIGH"
+        "severity": "CRITICAL"
       }
     ],
     "url_findings": [
       {
-        "url": "http://192.168.1.50/verify",
+        "url": "http://192.168.1.50/auth",
         "host": "192.168.1.50",
         "anomalies": [
           {
@@ -343,21 +342,33 @@ curl -s -X POST http://127.0.0.1:5000/api/analyze \
           }
         ]
       }
-    ]
+    ],
+    "dfa_risk_score": 95.0,
+    "total_transitions": 47
   },
   "machine_learning": {
-    "prediction": "PHISHING",
-    "phishing_probability": 0.7327,
-    "decision_threshold": 0.5,
+    "is_available": true,
+    "raw_label": 1,
+    "mapped_classification": "Phishing",
+    "label_mapping_verified": true,
+    "phishing_probability": 0.9741,
+    "legitimate_probability": 0.0259,
+    "confidence": 0.9741,
     "contributing_features": [
-      {"term": "account", "direction": "Phishing", "weight": 0.0835},
-      {"term": "verify", "direction": "Phishing", "weight": 0.0835}
+      {"term": "account", "direction": "Phishing", "weight": 0.8181},
+      {"term": "http", "direction": "Phishing", "weight": 0.7815},
+      {"term": "urgent", "direction": "Phishing", "weight": 0.3613}
     ]
   },
+  "indicators": [
+    "URL Anomaly [IP_ADDRESS_HOST]: Host is a raw numerical IP address...",
+    "DFA Pattern [Account Threat]: 'account has been suspended'...",
+    "DFA Pattern [Credential Harvesting]: 'confirm your password'..."
+  ],
   "reasons": [
     "URL Anomaly [IP_ADDRESS_HOST]: Host is a raw numerical IP address...",
-    "DFA Pattern [Credential Harvesting]: 'confirm your password'...",
-    "ML Classifier estimated phishing probability of 73.3%...",
+    "DFA Pattern [Account Threat]: 'account has been suspended'...",
+    "Trained ML Classifier estimated phishing probability of 97.4%...",
     "Risk floor elevated to 75+ due to critical DFA security violations."
   ],
   "disclaimer": "Disclaimer: PhishGuard analysis results are heuristic and statistical estimates intended for educational and triage assistance. Automated classifications are not guaranteed to be 100% correct; always verify sensitive requests through out-of-band channels."
@@ -366,52 +377,47 @@ curl -s -X POST http://127.0.0.1:5000/api/analyze \
 
 ---
 
-## 10. Small Language Model (SLM) Integration Guide
+## 10. DFA State Machine Specification
 
-PhishGuard provides a modular interface [`slm_detector.py`](file:///Users/sriramprasath/Documents/Phishing%20Email%20Detection/slm_detector.py) ready for integrating small on-premise language models (such as Llama-3.2-1B, Llama-3.2-3B, Phi-3.5-mini, or Gemma-2-2B).
+Formally, the token-based pattern detector is modeled as a 5-tuple:
+$$M = (Q, \Sigma, \delta, q_0, F)$$
 
-### Why an SLM?
-While TF-IDF detects vocabulary frequencies and DFAs match explicit phrases, Small Language Models excel at understanding:
-1. Contextual urgency and subtle psychological coercion tactics.
-2. Inconsistencies between sender claims and company practices.
-3. Conversational spear-phishing (e.g., CEO wire fraud) devoid of typical spam keywords.
-
-### Enabling the SLM Interface
-1. Launch an inference server locally using [Ollama](https://ollama.ai) or [vLLM](https://github.com/vllm-project/vllm):
-   ```bash
-   ollama run llama3.2:1b
-   ```
-2. Enable PhishGuard SLM environment variables:
-   ```bash
-   export PHISHGUARD_SLM_ENABLED=true
-   export PHISHGUARD_SLM_MODEL="llama3.2:1b"
-   export PHISHGUARD_SLM_ENDPOINT="http://localhost:11434/api/generate"
-   python app.py
-   ```
-3. **Prompt Injection Defenses**: The prompt generator encloses all email text within `<UNTRUSTED_EMAIL_CONTENT>` tags and applies explicit instruction hierarchy so adversarial prompts inside the email cannot hijack the evaluator.
+- **States ($Q$)**: Set of prefix states representing recognized subsequences of multi-token phishing phrases.
+- **Alphabet ($\Sigma$)**: Normalized lowercase word tokens.
+- **Transition Function ($\delta$)**: Deterministic step function transitioning to subsequent prefix states on token consumption with pre-computed failure links for $O(N)$ single-pass processing without backtracking.
+- **Accepting States ($F$)**: Terminal nodes signifying complete pattern detection with assigned severity weights (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`).
 
 ---
 
-## 11. Limitations & Adversarial Considerations
+## 11. SLM Clarification & Future Integration
 
-- **Statistical Limitations**: TF-IDF models rely on bag-of-words / n-gram frequencies; sophisticated zero-day spear phishing that uses completely novel phrasing may produce lower ML probabilities.
-- **DFA Boundary Limitations**: The DFA detects known configured phrases; intentional misspellings (e.g. *"v3rify your acc0unt"*) can evade exact string state transitions unless preprocessed with homoglyph normalization.
-- **False Positives**: Legitimate internal IT security broadcasts reminding employees to rotate passwords contain words similar to credential harvesting campaigns. PhishGuard surfaces salient feature tags and decision rationales to help human analysts verify these edge cases.
-- **Educational Disclaimer**: PhishGuard is a heuristic and statistical triage aid. Automated tools cannot replace human scrutiny and out-of-band verification.
+### Important Clarification
+The machine learning classifier integrated into PhishGuard is a **TF-IDF + Logistic Regression statistical pipeline**, **not a Small Language Model (SLM)**. 
+
+### Future SLM Integration Architecture
+PhishGuard provides a dedicated modular interface in [`slm_detector.py`](file:///Users/sriramprasath/Documents/Phishing%20Email%20Detection/slm_detector.py) designed to host a local SLM (e.g., Llama-3.2-1B, Phi-3.5-mini, or Gemma-2-2B) to audit conversational intent and coercion:
+1. **Prompt Isolation**: Treats email content as untrusted input enclosed within `<UNTRUSTED_EMAIL_CONTENT>` tags to resist prompt injection.
+2. **Local Inference Requirements**: Running an SLM locally requires approximately 2 GB–4 GB of RAM/VRAM using an inference engine like Ollama or vLLM (`export PHISHGUARD_SLM_ENABLED=true`).
+3. **No External Leaks**: Email contents are never transmitted to third-party proprietary APIs.
 
 ---
 
-## 12. Git & GitHub Setup
+## 12. Limitations, Adversarial Threats & Privacy
 
-The project includes a `.gitignore` configured to keep virtual environments (`.venv`), binary model caches (`*.joblib`), and temporary files untracked.
+- **Evasion via Novel Phrasing**: Highly conversational, bespoke spear-phishing messages lacking traditional spam vocabulary may yield lower statistical ML scores.
+- **Obfuscation**: Intentional token misspellings or homoglyphs (e.g. `p@ssw0rd`) can bypass exact DFA token matches unless preprocessed with character normalizers.
+- **Decision Support Only**: Automated classifications are triage aids and cannot replace human scrutiny and out-of-band verification.
+- **Privacy First**: Submitted emails are analyzed in-memory and are never stored to persistent databases or logged to external services.
 
-To publish to a new GitHub repository:
+---
 
+## 13. Git & GitHub Setup
+
+The project includes `.gitignore` to prevent committing virtual environments (`.venv`), temporary cache files, or large joblib binaries.
+
+To push changes to GitHub:
 ```bash
-git init
 git add .
-git commit -m "feat: initial commit of PhishGuard DFA & ML phishing detection platform"
-git branch -M main
-git remote add origin https://github.com/<your-username>/phishguard.git
-git push -u origin main
+git commit -m "feat: complete PhishGuard with integrated Colab model, verified label mapping, and comprehensive test suite"
+git push origin main
 ```
