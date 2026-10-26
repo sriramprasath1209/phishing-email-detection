@@ -1,0 +1,71 @@
+text,label
+"Project weekly sync meeting scheduled for tomorrow at 10:00 AM in Conference Room B. Please review the attached slide deck beforehand.",0
+"Your account has been suspended due to unauthorized login attempts. Verify your account immediately at http://192.168.1.1/auth to restore access.",1
+"Hey Alex, can you review my pull request on the user authentication branch when you get a chance? No rush, just before tomorrow's deploy.",0
+"URGENT: Immediate action required. Your bank account has been locked. Confirm your password and update payment information within 24 hours.",1
+"Thanks for dining with us! Here is your receipt for $42.50 at Blue Oak Cafe. We hope to see you again soon.",0
+"SECURITY ALERT: We detected a suspicious login attempt from Moscow, Russia. If this was not you, reset your password immediately.",1
+"Hi Sarah, let's grab lunch this Thursday around 12:30. Let me know if that works or if Friday is better for you.",0
+"Action Required: Your corporate mailbox is full and will stop receiving emails within 12 hours. Click here to unlock your mailbox storage quota.",1
+"Attached is the revised quarterly financial statement for Q3. Please let the accounting team know if you spot any discrepancies.",0
+"Final Notice: Your subscription payment failed. Your service will be terminated unless you update your banking details today.",1
+"The annual company picnic will be held on Saturday, July 15th at Sunnyvale Community Park. RSVP by next Tuesday.",0
+"WIRE TRANSFER REQUEST: Please execute an urgent wire payment of $48,500 to vendor account #88921 to clear customs fees by end of day.",1
+"Reminder: Open enrollment for health and dental insurance benefits closes on November 30th. Complete your selections in Workday.",0
+"Unauthorized sign-in attempt detected on your PayPal account. Click http://paypal.com@verify-secure-center.xyz/login to secure your balance.",1
+"Can you please send me the latest customer feedback survey results before our client presentation this afternoon?",0
+"Congratulations! You have won a $500 Amazon gift card. Claim your prize immediately by providing your credit card details.",1
+"The engineering team has completed the migration to the new PostgreSQL database cluster. Please monitor error logs for latency spikes.",0
+"URGENT: We detected suspicious activity on your credit card ending in 4921. Verify your credentials now to prevent card cancellation.",1
+"Here is the tracking link for your recent book order from Powell's Books: UPS tracking number 1Z9999999999999999.",0
+"Your Netflix account is on hold. Please update payment information within 24 hours to avoid automatic termination of your membership.",1
+"The next developer community meetup will be held on October 18th featuring talks on Rust and WebAssembly. Free admission with registration.",0
+"DHL Express: We attempted to deliver your parcel #882910 today but nobody was home. Click here to update your delivery address and pay $2.50 redelivery fee.",1
+"Good morning, here are the meeting notes from yesterday's product design review. Action items have been assigned in Jira.",0
+"Urgent response needed: Are you available right now? I am in a board meeting and need you to purchase 4 Apple gift cards for client incentives.",1
+"Your flight reservation to Chicago O'Hare (ORD) is confirmed for flight UA402 on September 12. Check-in opens 24 hours prior.",0
+"Security Notice: Immediate attention required. An unknown device accessed your account. Click here to verify your identity.",1
+"Please submit your travel expense reports for the Seattle conference by the end of this week so finance can process reimbursements.",0
+"FedEx Delivery Notification: Parcel held at customs due to unpaid import tax. Click http://192.168.2.14/customs to pay outstanding balance.",1
+"Hi team, just a reminder that the office will be closed on Monday for Memorial Day. Have a wonderful long weekend!",0
+"CRITICAL: Your Microsoft 365 license will expire today. Update your banking details to maintain uninterrupted cloud access.",1
+"Can you review the attached draft for the university research symposium paper on distributed consensus algorithms?",0
+"Your Apple ID has been locked for security reasons. Confirm your password and security questions at http://appleid.apple.com@secure-id-auth.xyz/verify.",1
+"The gym membership renewal receipt for the upcoming month is ready to download in your member portal account.",0
+"Warning: Unusual sign in activity from an unrecognized IP address (185.220.101.5). Click here to unlock and secure your profile.",1
+"Don't forget to push your code commits and tag the v2.4.0 release candidate before tonight's scheduled maintenance window.",0
+"Action required within 24 hours: Your tax refund of $1,420.00 is waiting for approval. Enter your banking credentials to direct deposit.",1
+"Thanks for scheduling your dental checkup with Dr. Miller on Wednesday, August 9th at 2:00 PM. Please arrive 10 minutes early.",0
+"Account Suspended: Immediate attention required. Multiple failed sign-in attempts detected. Reset your password immediately.",1
+"Our monthly company all-hands meeting will be broadcast live via Zoom on Wednesday at 11 AM PT. Q&A will be open on Slido.",0
+"You have 1 pending secure encrypted message from customer support. Enter your credentials to decrypt and view the document.",1
+"Hi David, thanks for sharing the benchmark report. The latency improvements on the microservice look very promising.",0
+"URGENT: Wire transfer instruction changed for Vendor Invoice #4401. Route payment to new account number 9901-4421 immediately.",1
+"Here is the grocery shopping list for tonight's dinner: tomatoes, garlic, basil, pasta, and olive oil.",0
+"Your cloud storage quota has been exceeded by 4.2 GB. Click here to unlock additional capacity or your files will be purged.",1
+"The library book you placed on hold is now available for pickup at the front circulation desk. Please claim within 7 days.",0
+"Suspicious activity detected on your cryptocurrency wallet. Verify your account private keys or passphrases to prevent liquidation.",1
+"Team, the continuous integration pipeline has been upgraded to Ubuntu 24.04 runners. Build times should be 20% faster.",0
+"FINAL WARNING: Your email access will be terminated within 24 hours due to non-compliance with IT security policy.",1
+"Looking forward to catching up at the conference next week! Let me know if you want to share a cab from the airport.",0
+"Your order has been cancelled due to suspected payment fraud. Click here to re-enter your credit card number and billing address.",1
+"Attached is the vendor agreement contract for the cloud hosting services. Please let legal know if you have feedback.",0
+"Action Required: Confirm your password to verify multi-factor authentication enrollment or lose single sign-on privileges.",1
+"Hi Emily, can you send over the high-resolution logos for the presentation tomorrow morning? Thank you!",0
+"Urgent Notice: We were unable to process your payroll direct deposit. Log in to employee self-service immediately to verify bank details.",1
+"The weather forecast looks great for this weekend's hiking trip in Marin County. Remember to bring plenty of water and snacks.",0
+"SECURITY NOTIFICATION: Unauthorized login attempt blocked from Singapore. Click http://192.168.10.88/sec to confirm your identity.",1
+"Please find the minutes from the community homeowners association meeting held last Tuesday attached in PDF format.",0
+"URGENT: Immediate response needed. I need you to wire $12,000 to our international logistics partner before the shipping cutoff.",1
+"Thank you for your donation of $50 to the Red Cross Disaster Relief Fund. Your tax-deductible receipt is attached.",0
+"Your cellular phone plan payment of $85.00 has failed. Click here to update payment information and keep service active.",1
+"Let's reschedule our 1-on-1 meeting to Friday afternoon as I will be out of office attending training sessions on Wednesday.",0
+"Failed delivery attempt: The postal carrier could not deliver your parcel. Click http://track-package.xyz/confirm to reschedule delivery.",1
+"The code refactoring for the telemetry ingestion pipeline has passed all unit and integration tests with 94% coverage.",0
+"Your social media account is scheduled for deletion due to copyright infringement. Click to appeal this decision within 48 hours.",1
+"Just wanted to check in and see how your first week at the new job is going! Let's get coffee soon.",0
+"URGENT SECURITY UPDATE: Critical vulnerability detected on your workstation. Enter your credentials to deploy the security patch.",1
+"Your reservation at Hotel Monaco in Portland from October 5 to October 8 has been confirmed. Confirmation number: HM-77291.",0
+"Account Alert: Immediate attention required. We noticed unusual activity on your debit card. Confirm your transactions now.",1
+"The keynote speaker for the annual engineering conference has been announced. Register before early-bird pricing ends on Friday.",0
+"Your mailbox has received 6 quarantined messages. Click here to unlock your incoming mail queue and release held messages.",1

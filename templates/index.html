@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="PhishGuard — Advanced Phishing Email Detection using Deterministic Finite Automaton (DFA) and Machine Learning Classifier.">
+    <title>PhishGuard | Phishing Email Detection Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Top Application Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <div class="brand-shield" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1 class="brand-title">PhishGuard</h1>
+                    <span class="brand-subtitle">DFA &amp; Machine Learning Threat Intelligence</span>
+                </div>
+            </div>
+
+            <div class="header-status" id="headerStatus">
+                <div class="status-chip" id="backendStatusChip">
+                    <span class="status-dot status-active" id="backendDot"></span>
+                    <span class="status-label" id="backendStatusText">Backend Online</span>
+                </div>
+                <div class="status-chip" id="modelStatusChip">
+                    <span class="status-dot status-neutral" id="modelDot"></span>
+                    <span class="status-label" id="modelStatusText">Checking Model...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="main-container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <span class="hero-badge">Cybersecurity Intelligence Platform</span>
+                <h2 class="hero-title">Think Before You Click</h2>
+                <p class="hero-description">
+                    Empowering email triage with formal Deterministic Finite Automata (DFA) state machines and 
+                    a custom-trained machine learning pipeline. Designed with a modular interface for future Small Language Model (SLM) reasoning.
+                </p>
+            </div>
+        </section>
+
+        <!-- Quick Sample Testing Presets -->
+        <section class="samples-section" aria-label="Quick Test Presets">
+            <div class="samples-header">
+                <span class="samples-title">Quick Test Presets:</span>
+                <span class="samples-hint">Click any preset to populate the analyzer</span>
+            </div>
+            <div class="samples-button-group">
+                <button type="button" class="sample-btn" id="sampleLegitBtn" data-sample="legit">
+                    <span class="btn-icon">✓</span> Legitimate Team Sync
+                </button>
+                <button type="button" class="sample-btn" id="sampleBankPhishBtn" data-sample="bank">
+                    <span class="btn-icon">⚠</span> Bank Account Lock (Phish)
+                </button>
+                <button type="button" class="sample-btn" id="sampleCourierBtn" data-sample="courier">
+                    <span class="btn-icon">⚠</span> Courier Delivery Scam
+                </button>
+                <button type="button" class="sample-btn" id="sampleWireBtn" data-sample="wire">
+                    <span class="btn-icon">⚠</span> Executive Wire Fraud
+                </button>
+            </div>
+        </section>
+
+        <!-- Analysis Grid Layout -->
+        <div class="analysis-layout">
+            <!-- Left Column: Input Form -->
+            <section class="card input-card" aria-labelledby="formSectionHeading">
+                <div class="card-header">
+                    <h3 id="formSectionHeading" class="card-title">Inspect Email Artifact</h3>
+                    <span class="card-caption">All text is processed safely server-side without executing embedded links</span>
+                </div>
+
+                <form id="emailAnalysisForm" class="analysis-form" novalidate>
+                    <!-- Sender Field -->
+                    <div class="form-group">
+                        <label for="emailSender" class="form-label">
+                            Sender Email Address <span class="label-optional">(Optional)</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="emailSender" 
+                            name="sender" 
+                            class="form-control" 
+                            placeholder="e.g. security-update@service-support.xyz"
+                            maxlength="320"
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <!-- Subject Field -->
+                    <div class="form-group">
+                        <label for="emailSubject" class="form-label">
+                            Email Subject <span class="label-required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="emailSubject" 
+                            name="subject" 
+                            class="form-control" 
+                            placeholder="e.g. Urgent: Your account has been suspended"
+                            maxlength="500"
+                            required
+                        >
+                    </div>
+
+                    <!-- Body Field -->
+                    <div class="form-group">
+                        <label for="emailBody" class="form-label">
+                            Email Body Content <span class="label-required">*</span>
+                        </label>
+                        <textarea 
+                            id="emailBody" 
+                            name="body" 
+                            class="form-control form-textarea" 
+                            rows="9" 
+                            placeholder="Paste the full raw text of the suspicious email here..."
+                            maxlength="50000"
+                            required
+                        ></textarea>
+                        <div class="form-meta">
+                            <span id="charCount" class="char-count">0 / 50,000 characters</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Controls -->
+                    <div class="form-actions">
+                        <button type="submit" id="analyzeBtn" class="btn btn-primary">
+                            <span class="btn-spinner" id="analyzeSpinner" aria-hidden="true"></span>
+                            <span id="analyzeBtnText">Analyze Email</span>
+                        </button>
+                        <button type="button" id="clearBtn" class="btn btn-secondary">
+                            Clear
+                        </button>
+                    </div>
+
+                    <!-- Error Alert Box -->
+                    <div id="formAlert" class="alert-box alert-error" role="alert" style="display: none;">
+                        <span class="alert-icon">!</span>
+                        <span id="formAlertText" class="alert-message"></span>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Right Column: Results Section -->
+            <section class="card results-card" id="resultsSection" aria-live="polite">
+                <!-- Initial Empty State -->
+                <div id="emptyState" class="state-container">
+                    <div class="state-graphic" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="2" y="4" width="20" height="16" rx="2"/>
+                            <path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7"/>
+                        </svg>
+                    </div>
+                    <h4 class="state-title">Awaiting Email Submission</h4>
+                    <p class="state-text">
+                        Input subject and body parameters on the left or select a preset to generate a deterministic DFA and machine learning risk assessment.
+                    </p>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loadingState" class="state-container" style="display: none;">
+                    <div class="scanning-pulse"></div>
+                    <h4 class="state-title">Executing Multi-Modal Scan</h4>
+                    <p class="state-text">
+                        Traversing DFA state transitions, computing TF-IDF n-grams, and evaluating model boundaries...
+                    </p>
+                </div>
+
+                <!-- Populated Results Container -->
+                <div id="populatedResults" style="display: none;">
+                    <!-- Verdict & Risk Summary Banner -->
+                    <div class="verdict-banner" id="verdictBanner">
+                        <div class="verdict-info">
+                            <span class="verdict-badge" id="riskLevelBadge">CRITICAL</span>
+                            <h3 class="verdict-title" id="finalClassification">PHISHING DETECTED</h3>
+                            <span class="operating-mode-tag" id="operatingModeTag">Hybrid Engine</span>
+                        </div>
+                        <div class="score-dial">
+                            <div class="score-circle" id="scoreCircle">
+                                <span class="score-number" id="riskScoreValue">88</span>
+                                <span class="score-denom">/100</span>
+                            </div>
+                            <span class="score-label">Risk Score</span>
+                        </div>
+                    </div>
+
+                    <!-- Component Breakdown Tabs / Cards -->
+                    <div class="metrics-grid">
+                        <!-- DFA Summary Metric Card -->
+                        <div class="metric-card">
+                            <div class="metric-card-header">
+                                <span class="metric-title">DFA State Machine</span>
+                                <span class="metric-badge badge-dfa" id="dfaScoreBadge">Score: 75</span>
+                            </div>
+                            <div class="metric-body">
+                                <div class="metric-stat">
+                                    <span class="stat-value" id="dfaTransitionsCount">142</span>
+                                    <span class="stat-name">Transitions</span>
+                                </div>
+                                <div class="metric-stat">
+                                    <span class="stat-value" id="dfaPhrasesCount">3</span>
+                                    <span class="stat-name">Phrases</span>
+                                </div>
+                                <div class="metric-stat">
+                                    <span class="stat-value" id="dfaUrlAnomaliesCount">1</span>
+                                    <span class="stat-name">URL Flags</span>
+                                </div>
+                            </div>
+                            <p class="metric-caption" id="dfaSummaryText">DFA completed deterministic scanning.</p>
+                        </div>
+
+                        <!-- ML Model Metric Card -->
+                        <div class="metric-card">
+                            <div class="metric-card-header">
+                                <span class="metric-title">Machine Learning Model</span>
+                                <span class="metric-badge badge-ml" id="mlStatusBadge">Active</span>
+                            </div>
+                            <div class="metric-body">
+                                <div class="metric-stat">
+                                    <span class="stat-value" id="mlProbabilityValue">92%</span>
+                                    <span class="stat-name">Phishing Prob</span>
+                                </div>
+                                <div class="metric-stat">
+                                    <span class="stat-value" id="mlConfidenceValue">92%</span>
+                                    <span class="stat-name">Confidence</span>
+                                </div>
+                                <div class="metric-stat">
+                                    <span class="stat-value" id="mlThresholdValue">50%</span>
+                                    <span class="stat-name">Threshold</span>
+                                </div>
+                            </div>
+                            <p class="metric-caption" id="mlStatusMessage">Inference completed successfully.</p>
+                        </div>
+
+                        <!-- SLM Architecture Metric Card -->
+                        <div class="metric-card">
+                            <div class="metric-card-header">
+                                <span class="metric-title">Small Language Model (SLM)</span>
+                                <span class="metric-badge badge-slm" id="slmBadge">Modular Interface</span>
+                            </div>
+                            <p class="slm-status-text" id="slmStatusText">
+                                Interface ready for fine-tuned reasoning model (e.g. Llama-3.2-1B). Analyzes intent and coercion without executing content.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Evidence & Indicators Section -->
+                    <div class="details-section">
+                        <!-- Detected DFA Phrases -->
+                        <div class="details-group" id="phrasesGroup">
+                            <h4 class="details-heading">Detected Threat Phrases &amp; Patterns (DFA)</h4>
+                            <div id="phrasesContainer" class="indicator-tags-container"></div>
+                        </div>
+
+                        <!-- Detected URL Findings -->
+                        <div class="details-group" id="urlsGroup">
+                            <h4 class="details-heading">URL Structural Analysis &amp; Host Anomalies</h4>
+                            <div id="urlsContainer" class="url-findings-container"></div>
+                        </div>
+
+                        <!-- Salient ML Features -->
+                        <div class="details-group" id="mlFeaturesGroup">
+                            <h4 class="details-heading">Salient Text Features Influencing Classifier</h4>
+                            <div id="featuresContainer" class="features-container"></div>
+                        </div>
+
+                        <!-- Transparent Decision Explanation -->
+                        <div class="details-group">
+                            <h4 class="details-heading">Decision Rationale &amp; Audit Trail</h4>
+                            <ul id="reasonsList" class="reasons-list"></ul>
+                        </div>
+                    </div>
+
+                    <!-- Mandatory Disclaimer Footer -->
+                    <div class="disclaimer-box">
+                        <span class="disclaimer-icon">ℹ</span>
+                        <p id="disclaimerText" class="disclaimer-content">
+                            Disclaimer: PhishGuard analysis results are heuristic and statistical estimates intended for educational and triage assistance. Automated classifications are not guaranteed to be 100% correct; always verify sensitive requests through out-of-band channels.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <p>PhishGuard &copy; Phishing Email Detection System &mdash; Built with Deterministic Finite Automata, Scikit-learn, and Flask.</p>
+        </div>
+    </footer>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>
